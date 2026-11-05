@@ -25,6 +25,15 @@ docs:
   # Ne s'applique pas aux PDF et notebooks, dont on n'extrait que le texte.
   max_file_kb: 500
 
+chunking:
+  # Taille max d'un morceau, en caractères (~4 caractères par token).
+  # Trop petit : le morceau perd son contexte. Trop gros : il mélange
+  # plusieurs sujets et la recherche devient floue.
+  size: 1000
+  # Caractères répétés entre deux morceaux voisins, pour ne pas couper
+  # une idée en deux sans qu'aucun des deux morceaux ne la contienne entière.
+  overlap: 150
+
 ollama:
   host: http://localhost:11434
   # Modèle qui répond aux questions (réutilisé par l'agent de l'idée 3)
