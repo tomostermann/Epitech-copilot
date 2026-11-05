@@ -14,6 +14,8 @@ class Config:
     exclude_dirs: frozenset[str]
     exclude_files: tuple[str, ...]
     max_file_kb: int
+    chunk_size: int
+    chunk_overlap: int
     ollama_host: str
     chat_model: str
     embed_model: str
@@ -41,6 +43,8 @@ def load_config(path: str | Path = "config.yaml") -> Config:
         exclude_dirs=frozenset(docs.get("exclude_dirs", [])),
         exclude_files=tuple(docs.get("exclude_files", [])),
         max_file_kb=docs.get("max_file_kb", 500),
+        chunk_size=raw.get("chunking", {}).get("size", 1000),
+        chunk_overlap=raw.get("chunking", {}).get("overlap", 150),
         ollama_host=raw["ollama"]["host"],
         chat_model=raw["ollama"]["chat_model"],
         embed_model=raw["ollama"]["embed_model"],
