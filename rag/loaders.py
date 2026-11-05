@@ -7,11 +7,12 @@ aucune étape suivante ne pourra rattraper l'information perdue.
 import fnmatch
 import json
 import os
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator
 
-from pypdf import PdfReader
+import pymupdf
 
 from rag.config import Config
 
@@ -39,10 +40,13 @@ def read_text(path: Path) -> str:
 
 
 def read_pdf(path: Path) -> str:
-    reader = PdfReader(path)
+    # PyMuPDF plutôt que pypdf : sur les sujets EPITECH, pypdf colle les mots
+    # entre eux ("Youarepartofthefirst..."), ce qui rend les embeddings inutiles.
     pages = []
-    for i, page in enumerate(reader.pages, start=1):
-        text = (page.extract_text() or "").strip()
+    with pymupdf.open(path) as pdf:
+        texts = [page.get_text() for page in pdf]
+    for i, text in enumerate(texts, start=1):
+        text = text.strip()
         if text:
             # On garde le numéro de page : utile pour citer la source plus tard
             pages.append(f"[page {i}]\n{text}")
@@ -121,6 +125,8 @@ def load_file(path: Path, cfg: Config) -> Document | Skipped:
         text = reader(path).strip()
     except Exception as e:
         return Skipped(rel, f"erreur de lecture : {type(e).__name__}: {e}")
+    # NFKC : transforme les ligatures typographiques ("ﬁ") en lettres normales ("fi")
+    text = unicodedata.normalize("NFKC", text)
     if not text:
         # Typiquement un PDF scanné (des images, pas de texte)
         return Skipped(rel, "aucun texte extrait")
