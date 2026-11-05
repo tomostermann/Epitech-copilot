@@ -5,9 +5,29 @@ docs:
   # Dossier racine à indexer
   root: /Users/tomostermann/EPITECH
 
+  # Profondeur du dossier qui représente un projet, depuis root.
+  # EPITECH/BACH-2-ANNEE/STARTTREK -> 2 (année, puis projet)
+  project_depth: 2
+
+  # Types de fichiers lus. Le reste (images, datasets, binaires) est ignoré.
+  extensions: [.md, .txt, .pdf, .ipynb, .py, .java, .js, .jsx, .ts, .tsx,
+               .php, .sql, .html, .css, .sh, .puml, .prompt]
+
+  # Dossiers jamais parcourus : dépendances, builds, caches, données brutes
+  exclude_dirs: [.git, node_modules, .venv, venv, __pycache__, dist, build,
+                 .next, target, cache, data, datasets, cleaned_datasets,
+                 .idea, .vscode, coverage]
+
+  # Fichiers jamais lus : bibliothèques minifiées copiées dans les projets
+  exclude_files: ["*.min.js", "*.min.css", "*.lock", "package-lock.json"]
+
+  # Fichiers texte au-delà de cette taille ignorés (code généré, gros exports).
+  # Ne s'applique pas aux PDF et notebooks, dont on n'extrait que le texte.
+  max_file_kb: 500
+
 ollama:
   host: http://localhost:11434
-  # Modèle qui répond aux questions (et qui pilotera l'agent à l'étape 9)
+  # Modèle qui répond aux questions (réutilisé par l'agent de l'idée 3)
   chat_model: qwen2.5:7b
   # Modèle qui transforme un texte en vecteur
   embed_model: nomic-embed-text

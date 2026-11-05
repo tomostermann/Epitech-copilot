@@ -9,6 +9,11 @@ import yaml
 @dataclass(frozen=True)
 class Config:
     docs_root: Path
+    project_depth: int
+    extensions: frozenset[str]
+    exclude_dirs: frozenset[str]
+    exclude_files: tuple[str, ...]
+    max_file_kb: int
     ollama_host: str
     chat_model: str
     embed_model: str
@@ -28,8 +33,14 @@ def load_config(path: str | Path = "config.yaml") -> Config:
     if not db_path.is_absolute():
         db_path = (base / db_path).resolve()
 
+    docs = raw["docs"]
     return Config(
-        docs_root=Path(raw["docs"]["root"]).expanduser(),
+        docs_root=Path(docs["root"]).expanduser(),
+        project_depth=docs.get("project_depth", 1),
+        extensions=frozenset(e.lower() for e in docs["extensions"]),
+        exclude_dirs=frozenset(docs.get("exclude_dirs", [])),
+        exclude_files=tuple(docs.get("exclude_files", [])),
+        max_file_kb=docs.get("max_file_kb", 500),
         ollama_host=raw["ollama"]["host"],
         chat_model=raw["ollama"]["chat_model"],
         embed_model=raw["ollama"]["embed_model"],
