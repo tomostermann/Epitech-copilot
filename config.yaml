@@ -40,6 +40,12 @@ ollama:
   chat_model: qwen2.5:7b
   # Modèle qui transforme un texte en vecteur
   embed_model: nomic-embed-text
+  # nomic-embed-text a été entraîné avec ces préfixes : il "sait" ainsi si le
+  # texte est une question ou un document. À vider si on change de modèle.
+  embed_query_prefix: "search_query: "
+  embed_document_prefix: "search_document: "
+  # Nombre de morceaux envoyés à Ollama en une seule requête
+  embed_batch_size: 32
 
 vector_store:
   # Emplacement de la base ChromaDB sur le disque

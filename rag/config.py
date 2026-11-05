@@ -19,6 +19,9 @@ class Config:
     ollama_host: str
     chat_model: str
     embed_model: str
+    embed_query_prefix: str
+    embed_document_prefix: str
+    embed_batch_size: int
     db_path: Path
     collection: str
 
@@ -48,6 +51,9 @@ def load_config(path: str | Path = "config.yaml") -> Config:
         ollama_host=raw["ollama"]["host"],
         chat_model=raw["ollama"]["chat_model"],
         embed_model=raw["ollama"]["embed_model"],
+        embed_query_prefix=raw["ollama"].get("embed_query_prefix", ""),
+        embed_document_prefix=raw["ollama"].get("embed_document_prefix", ""),
+        embed_batch_size=raw["ollama"].get("embed_batch_size", 32),
         db_path=db_path,
         collection=raw["vector_store"]["collection"],
     )
