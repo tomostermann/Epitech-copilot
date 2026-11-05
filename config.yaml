@@ -1,0 +1,18 @@
+# Configuration du copilote. Rien n'est en dur dans le code :
+# l'idée 3 réutilisera le module rag/ avec son propre fichier de config.
+
+docs:
+  # Dossier racine à indexer
+  root: /Users/tomostermann/EPITECH
+
+ollama:
+  host: http://localhost:11434
+  # Modèle qui répond aux questions (et qui pilotera l'agent à l'étape 9)
+  chat_model: qwen2.5:7b
+  # Modèle qui transforme un texte en vecteur
+  embed_model: nomic-embed-text
+
+vector_store:
+  # Emplacement de la base ChromaDB sur le disque
+  path: ./data/chroma
+  collection: epitech
