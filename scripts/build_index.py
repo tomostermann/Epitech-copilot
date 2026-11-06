@@ -3,6 +3,7 @@
     uv run python scripts/build_index.py                         # tout, incrémental
     uv run python scripts/build_index.py BACH-2-ANNEE/STARTTREK  # un seul projet
     uv run python scripts/build_index.py --full                  # tout reconstruire
+    uv run python scripts/build_index.py --duplicates            # lister les doublons
 """
 
 import argparse
@@ -27,21 +28,26 @@ def show_list(title: str, items: list[str], limit: int = 10) -> None:
         print(f"  ... et {len(items) - limit} autres")
 
 
-def show_duplicates(cfg) -> None:
+def show_duplicates(cfg, details: bool) -> None:
     by_hash = defaultdict(list)
     for path, meta in VectorStore(cfg).indexed_files().items():
         by_hash[meta["hash"]].append(path)
     groups = [sorted(p) for p in by_hash.values() if len(p) > 1]
-    if groups:
-        print(f"\nFichiers identiques indexés plusieurs fois ({len(groups)} groupes) :")
-        for g in groups[:5]:
-            print("  = " + "\n    ".join(g))
+    if not groups:
+        return
+    if not details:
+        print(f"{len(groups)} groupes de fichiers identiques (--duplicates pour les voir)")
+        return
+    print(f"\nFichiers identiques indexés plusieurs fois ({len(groups)} groupes) :")
+    for g in groups:
+        print("  = " + "\n    ".join(g))
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("path", nargs="?", help="sous-dossier à indexer (relatif à docs.root)")
     ap.add_argument("--full", action="store_true", help="tout reconstruire")
+    ap.add_argument("--duplicates", action="store_true", help="lister les fichiers en double")
     args = ap.parse_args()
 
     cfg = rag.load_config()
@@ -64,7 +70,7 @@ def main() -> None:
     print(f"\n{len(r.added)} nouveaux, {len(r.modified)} modifiés, "
           f"{len(r.removed)} supprimés, {r.unchanged} inchangés "
           f"-> {r.chunks} morceaux vectorisés en {time.time() - start:.1f} s")
-    show_duplicates(cfg)
+    show_duplicates(cfg, args.duplicates)
 
 
 if __name__ == "__main__":
