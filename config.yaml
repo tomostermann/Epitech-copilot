@@ -38,6 +38,10 @@ ollama:
   host: http://localhost:11434
   # Modèle qui répond aux questions (réutilisé par l'agent de l'idée 3)
   chat_model: qwen2.5:7b
+  # Taille de la "mémoire de travail" du modèle, en tokens. Ollama met 4096 par
+  # défaut : avec 5 extraits + la question, on frôle la limite, et Ollama coupe
+  # le début du prompt SANS prévenir (donc les premiers extraits disparaissent).
+  chat_num_ctx: 8192
   # Modèle qui transforme un texte en vecteur
   # bge-m3 : multilingue, une question en français retrouve un sujet en anglais.
   # (nomic-embed-text classait les notes en français avant les sujets en anglais)
@@ -48,6 +52,10 @@ ollama:
   embed_document_prefix: ""
   # Nombre de morceaux envoyés à Ollama en une seule requête
   embed_batch_size: 32
+
+search:
+  # Nombre d'extraits donnés au modèle pour répondre
+  k: 5
 
 vector_store:
   # Emplacement de la base ChromaDB sur le disque
