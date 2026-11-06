@@ -39,15 +39,19 @@ ollama:
   # Modèle qui répond aux questions (réutilisé par l'agent de l'idée 3)
   chat_model: qwen2.5:7b
   # Modèle qui transforme un texte en vecteur
-  embed_model: nomic-embed-text
-  # nomic-embed-text a été entraîné avec ces préfixes : il "sait" ainsi si le
-  # texte est une question ou un document. À vider si on change de modèle.
-  embed_query_prefix: "search_query: "
-  embed_document_prefix: "search_document: "
+  # bge-m3 : multilingue, une question en français retrouve un sujet en anglais.
+  # (nomic-embed-text classait les notes en français avant les sujets en anglais)
+  embed_model: bge-m3
+  # Préfixes propres à certains modèles. nomic-embed-text attend
+  # "search_query: " / "search_document: ". bge-m3 n'en utilise pas.
+  embed_query_prefix: ""
+  embed_document_prefix: ""
   # Nombre de morceaux envoyés à Ollama en une seule requête
   embed_batch_size: 32
 
 vector_store:
   # Emplacement de la base ChromaDB sur le disque
   path: ./data/chroma
-  collection: epitech
+  # Une collection par modèle : des vecteurs de modèles différents ne sont
+  # pas comparables (768 nombres pour nomic, 1024 pour bge-m3).
+  collection: epitech-bge-m3
