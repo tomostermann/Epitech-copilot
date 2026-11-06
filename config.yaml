@@ -1,0 +1,67 @@
+# Configuration du copilote. Rien n'est en dur dans le code :
+# l'idée 3 réutilisera le module rag/ avec son propre fichier de config.
+
+docs:
+  # Dossier racine à indexer
+  root: /Users/tomostermann/EPITECH
+
+  # Profondeur du dossier qui représente un projet, depuis root.
+  # EPITECH/BACH-2-ANNEE/STARTTREK -> 2 (année, puis projet)
+  project_depth: 2
+
+  # Types de fichiers lus. Le reste (images, datasets, binaires) est ignoré.
+  extensions: [.md, .txt, .pdf, .ipynb, .py, .java, .js, .jsx, .ts, .tsx,
+               .php, .sql, .html, .css, .sh, .puml, .prompt]
+
+  # Dossiers jamais parcourus : dépendances, builds, caches, données brutes
+  exclude_dirs: [.git, node_modules, .venv, venv, __pycache__, dist, build,
+                 .next, target, cache, data, datasets, cleaned_datasets,
+                 .idea, .vscode, coverage]
+
+  # Fichiers jamais lus : bibliothèques minifiées copiées dans les projets
+  exclude_files: ["*.min.js", "*.min.css", "*.lock", "package-lock.json"]
+
+  # Fichiers texte au-delà de cette taille ignorés (code généré, gros exports).
+  # Ne s'applique pas aux PDF et notebooks, dont on n'extrait que le texte.
+  max_file_kb: 500
+
+chunking:
+  # Taille max d'un morceau, en caractères (~4 caractères par token).
+  # Trop petit : le morceau perd son contexte. Trop gros : il mélange
+  # plusieurs sujets et la recherche devient floue.
+  size: 1000
+  # Caractères répétés entre deux morceaux voisins, pour ne pas couper
+  # une idée en deux sans qu'aucun des deux morceaux ne la contienne entière.
+  overlap: 150
+
+ollama:
+  host: http://localhost:11434
+  # Modèle qui répond aux questions (réutilisé par l'agent de l'idée 3)
+  chat_model: qwen2.5:7b
+  # Taille de la "mémoire de travail" du modèle, en tokens. Ollama met 4096 par
+  # défaut : avec 5 extraits + la question, on frôle la limite, et Ollama coupe
+  # le début du prompt SANS prévenir (donc les premiers extraits disparaissent).
+  chat_num_ctx: 8192
+  # Modèle qui transforme un texte en vecteur
+  # bge-m3 : multilingue, une question en français retrouve un sujet en anglais.
+  # (nomic-embed-text classait les notes en français avant les sujets en anglais)
+  embed_model: bge-m3
+  # Préfixes propres à certains modèles. nomic-embed-text attend
+  # "search_query: " / "search_document: ". bge-m3 n'en utilise pas.
+  embed_query_prefix: ""
+  embed_document_prefix: ""
+  # Nombre de morceaux envoyés à Ollama en une seule requête
+  embed_batch_size: 32
+
+search:
+  # Nombre d'extraits donnés au modèle pour répondre
+  k: 5
+  # Langue des réponses, quelle que soit la langue des extraits
+  answer_language: français
+
+vector_store:
+  # Emplacement de la base ChromaDB sur le disque
+  path: ./data/chroma
+  # Une collection par modèle : des vecteurs de modèles différents ne sont
+  # pas comparables (768 nombres pour nomic, 1024 pour bge-m3).
+  collection: epitech-bge-m3

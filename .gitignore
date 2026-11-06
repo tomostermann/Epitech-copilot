@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Base vectorielle ChromaDB (générée par l'indexation, se reconstruit)
+data/
+
+# macOS
+.DS_Store
