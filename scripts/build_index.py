@@ -1,33 +1,76 @@
-"""Étape 4 : indexe tout le dossier EPITECH dans ChromaDB.
+"""Étapes 4-5 : indexe le dossier EPITECH dans ChromaDB, en incrémental.
 
-    uv run python scripts/build_index.py
+    uv run python scripts/build_index.py                         # tout, incrémental
+    uv run python scripts/build_index.py BACH-2-ANNEE/STARTTREK  # un seul projet
+    uv run python scripts/build_index.py --full                  # tout reconstruire
+    uv run python scripts/build_index.py --duplicates            # lister les doublons
 """
 
+import argparse
 import sys
 import time
+from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from rag.config import load_config
-from rag.indexer import build_index
+import rag
+from rag.store import VectorStore
+
+
+def show_list(title: str, items: list[str], limit: int = 10) -> None:
+    if not items:
+        return
+    print(f"\n{title} ({len(items)}) :")
+    for p in items[:limit]:
+        print(f"  {p}")
+    if len(items) > limit:
+        print(f"  ... et {len(items) - limit} autres")
+
+
+def show_duplicates(cfg, details: bool) -> None:
+    by_hash = defaultdict(list)
+    for path, meta in VectorStore(cfg).indexed_files().items():
+        by_hash[meta["hash"]].append(path)
+    groups = [sorted(p) for p in by_hash.values() if len(p) > 1]
+    if not groups:
+        return
+    if not details:
+        print(f"{len(groups)} groupes de fichiers identiques (--duplicates pour les voir)")
+        return
+    print(f"\nFichiers identiques indexés plusieurs fois ({len(groups)} groupes) :")
+    for g in groups:
+        print("  = " + "\n    ".join(g))
 
 
 def main() -> None:
-    cfg = load_config()
-    print(f"Indexation de {cfg.docs_root}")
-    print(f"  modèle : {cfg.embed_model}   base : {cfg.db_path}\n")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("path", nargs="?", help="sous-dossier à indexer (relatif à docs.root)")
+    ap.add_argument("--full", action="store_true", help="tout reconstruire")
+    ap.add_argument("--duplicates", action="store_true", help="lister les fichiers en double")
+    args = ap.parse_args()
+
+    cfg = rag.load_config()
+    target = args.path or "tout le dossier"
+    print(f"Indexation de {target}  (modèle {cfg.embed_model})")
     start = time.time()
 
     def progress(done: int, total: int) -> None:
-        elapsed = time.time() - start
-        rate = done / elapsed if elapsed else 0
+        rate = done / (time.time() - start)
         bar = "#" * (30 * done // total)
         print(f"\r  [{bar:<30}] {done}/{total} morceaux  ({rate:.0f}/s)", end="", flush=True)
 
-    report = build_index(cfg, progress=progress)
-    print(f"\n\n{report.files} fichiers -> {report.chunks} morceaux "
-          f"en {time.time() - start:.0f} s ({len(report.skipped)} fichiers ignorés)")
+    r = rag.index(args.path, config=cfg, full=args.full, progress=progress)
+
+    if r.rebuilt:
+        print(f"\nBase reconstruite : {r.rebuilt}")
+    show_list("Nouveaux", r.added)
+    show_list("Modifiés", r.modified)
+    show_list("Supprimés", r.removed)
+    print(f"\n{len(r.added)} nouveaux, {len(r.modified)} modifiés, "
+          f"{len(r.removed)} supprimés, {r.unchanged} inchangés "
+          f"-> {r.chunks} morceaux vectorisés en {time.time() - start:.1f} s")
+    show_duplicates(cfg, args.duplicates)
 
 
 if __name__ == "__main__":

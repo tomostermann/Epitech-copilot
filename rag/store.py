@@ -66,3 +66,34 @@ class VectorStore:
 
     def count(self) -> int:
         return self.collection.count()
+
+    # ---------- étape 5 : ce qu'il faut pour l'indexation incrémentale ----------
+
+    def indexed_files(self) -> dict[str, dict]:
+        """{chemin: {"hash", "mtime"}} de chaque fichier présent dans la base.
+
+        On lit seulement le morceau 0 de chaque fichier : tous les morceaux
+        d'un même fichier portent le même hash et la même date.
+        """
+        res = self.collection.get(where={"chunk_index": 0}, include=["metadatas"])
+        return {
+            m["path"]: {"hash": m.get("hash"), "mtime": m.get("mtime")}
+            for m in res["metadatas"]
+        }
+
+    def delete_file(self, path: str) -> None:
+        self.collection.delete(where={"path": path})
+
+    def touch_file(self, path: str, mtime: float) -> None:
+        """Fichier ré-enregistré sans changement : on met juste sa date à jour,
+        pour ne pas recalculer son hash à chaque lancement."""
+        ids = self.collection.get(where={"path": path}, include=[])["ids"]
+        if ids:
+            self.collection.update(ids=ids, metadatas=[{"mtime": mtime}] * len(ids))
+
+    @property
+    def settings(self) -> str | None:
+        return (self.collection.metadata or {}).get("settings")
+
+    def set_settings(self, value: str) -> None:
+        self.collection.modify(metadata={"settings": value})

@@ -5,6 +5,7 @@ aucune étape suivante ne pourra rattraper l'information perdue.
 """
 
 import fnmatch
+import hashlib
 import json
 import os
 import unicodedata
@@ -90,6 +91,15 @@ def iter_files(cfg: Config, root: Path | None = None) -> Iterator[Path]:
             yield path
 
 
+def file_hash(path: Path) -> str:
+    """Empreinte du contenu : change dès qu'un seul octet du fichier change."""
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
 def build_metadata(path: Path, cfg: Config) -> dict:
     """Déduit année et projet du chemin : BACH-2-ANNEE/STARTTREK/... """
     rel = path.relative_to(cfg.docs_root)
@@ -106,6 +116,7 @@ def build_metadata(path: Path, cfg: Config) -> dict:
         "ext": path.suffix.lower(),
         "mtime": stat.st_mtime,
         "size": stat.st_size,
+        "hash": file_hash(path),
     }
 
 
