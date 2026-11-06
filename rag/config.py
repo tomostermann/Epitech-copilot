@@ -18,6 +18,9 @@ class Config:
     chunk_overlap: int
     ollama_host: str
     chat_model: str
+    chat_num_ctx: int
+    search_k: int
+    answer_language: str
     embed_model: str
     embed_query_prefix: str
     embed_document_prefix: str
@@ -50,6 +53,9 @@ def load_config(path: str | Path = "config.yaml") -> Config:
         chunk_overlap=raw.get("chunking", {}).get("overlap", 150),
         ollama_host=raw["ollama"]["host"],
         chat_model=raw["ollama"]["chat_model"],
+        chat_num_ctx=raw["ollama"].get("chat_num_ctx", 8192),
+        search_k=raw.get("search", {}).get("k", 5),
+        answer_language=raw.get("search", {}).get("answer_language", "français"),
         embed_model=raw["ollama"]["embed_model"],
         embed_query_prefix=raw["ollama"].get("embed_query_prefix", ""),
         embed_document_prefix=raw["ollama"].get("embed_document_prefix", ""),
