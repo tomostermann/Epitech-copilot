@@ -17,3 +17,15 @@ uv run python scripts/check_env.py
 - `rag/` : module RAG réutilisable (indépendant de l'agent et du MCP)
 - `scripts/` : scripts de test par étape
 - `config.yaml` : chemins et modèles
+
+## Serveur MCP
+
+`servers/docs_server.py` expose le RAG à n'importe quel client MCP (transport stdio) :
+
+- `list_epitech_projects` : les projets indexés
+- `search_epitech_docs(query, k, project, file_types)` : les passages les plus proches
+
+```bash
+uv run python scripts/mcp_client.py "combien d'actions ?" --project STARTTREK
+npx @modelcontextprotocol/inspector uv run python servers/docs_server.py
+```
