@@ -56,6 +56,8 @@ ollama:
 search:
   # Nombre d'extraits donnés au modèle pour répondre
   k: 5
+  # Langue des réponses, quelle que soit la langue des extraits
+  answer_language: français
 
 vector_store:
   # Emplacement de la base ChromaDB sur le disque

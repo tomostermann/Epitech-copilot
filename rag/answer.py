@@ -19,7 +19,7 @@ Règles :
 - Réponds UNIQUEMENT à partir des extraits fournis, jamais de tes connaissances générales.
 - Après chaque information, cite l'extrait d'où elle vient avec son numéro, par exemple [2].
 - Si les extraits ne contiennent pas la réponse, dis-le clairement et n'invente rien.
-- Les extraits peuvent être en anglais : réponds dans la langue de la question.
+- Les extraits peuvent être dans une autre langue que la réponse.
 - Sois concis."""
 
 
@@ -29,9 +29,13 @@ def source_label(hit: Hit) -> str:
     return f"{m['project']} — {m['path']}{page}"
 
 
-def build_prompt(question: str, hits: list[Hit]) -> str:
+def build_prompt(question: str, hits: list[Hit], language: str) -> str:
     blocks = [f"[{i}] ({source_label(h)})\n{h.text}" for i, h in enumerate(hits, start=1)]
-    return "Extraits :\n\n" + "\n\n---\n\n".join(blocks) + f"\n\nQuestion : {question}"
+    # La consigne de langue est répétée ICI, à la fin : un petit modèle suit
+    # surtout ce qu'il vient de lire. Placée seulement dans le prompt système,
+    # elle était noyée sous 5 extraits en anglais, et il répondait en anglais.
+    return ("Extraits :\n\n" + "\n\n---\n\n".join(blocks)
+            + f"\n\nQuestion : {question}\n\nRéponds en {language}, en citant les extraits.")
 
 
 def answer_stream(cfg: Config, question: str, hits: list[Hit]) -> Iterator[str]:
@@ -41,7 +45,7 @@ def answer_stream(cfg: Config, question: str, hits: list[Hit]) -> Iterator[str]:
         model=cfg.chat_model,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": build_prompt(question, hits)},
+            {"role": "user", "content": build_prompt(question, hits, cfg.answer_language)},
         ],
         options={"num_ctx": cfg.chat_num_ctx, "temperature": 0.1},
         stream=True,
